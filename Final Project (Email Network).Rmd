@@ -93,7 +93,7 @@ plot(enron, vertex.size=3, vertex.label=NA, edge.arrow.size=0.1, main="email-Enr
 
 ### Centrality Measures
 
-The degree distribution in the fb-forum dataset is relatively balanced, showing most users have a modest number of connections, which aligns with forum-based discussion where users reply occasionally. In contrast, the Enron email data has a few users with very high degrees — this is typical in corporate networks, where certain roles (like executives or assistants) act as communication hubs.
+The degree distribution in the fb-forum dataset is relatively balanced, showing most users have a modest number of connections, which aligns with forum-based discussion where users reply occasionally. In contrast, the Enron email data has a few users with very high degrees, which mean this is typical in corporate networks, where certain roles (like executives or assistants) act as communication hubs.
 
 ```{r, message=FALSE, warning=FALSE}
 fb_deg <- degree(fb)
