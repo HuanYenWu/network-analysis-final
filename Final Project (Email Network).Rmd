@@ -1,0 +1,128 @@
+---
+title: "Visualizing Influence and Community Formation in Online Interaction Networks"
+author: "Huan Yen Wu"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+## Table of Contents
+1. [Introduction](#introduction)
+2. [Setup and Data Description](#setup)
+3. [Network Visualizations](#visualizations)
+4. [Network Analysis](#analysis)
+5. [Conclusion](#conclusion)
+
+
+## Introduction {#introduction}
+
+In this project, I wanted to explore how users form communities and how influence shows up in online interaction networks. I used two datasets one synthetic (fb forum) and one real (email Enron) to examine patterns of connection, centrality, and community structure. My goal was to understand whether these networks are cohesive, how fragmented they might be, and who the most central or influential actors are.
+
+## Setup and Data Description {#setup}
+
+Packages and Data Loading
+```{r setup, warning = FALSE, message = FALSE }
+library(igraph)
+library(tidyverse)
+library(Matrix)
+```
+
+
+Dataset 1: **fb-forum**
+
+Source: https://networkrepository.com/fb-forum.php
+
+Nodes: 899
+
+Edges: 33,700
+
+Type: Undirected
+
+Description: This dataset is synthetic but is designed to model real user interaction patterns in an online discussion forum. The ties are undirected, meaning they show that two users interacted, but not who started the interaction. Since the fb-forum dataset is synthetic, it was created using simulated parameters to reflect realistic user behavior in an online discussion forum. While I didn’t set these parameters myself, the data likely models features such as the number of users, how often users interact, and how clustered their interactions are.
+
+```{r, warning = FALSE, message = FALSE}
+edges <- read.csv("fb-forum.edges", header = FALSE)
+fb <- graph_from_data_frame(edges, directed = FALSE)
+```
+
+
+Dataset 2: **email-Enron**
+
+Source: https://networkrepository.com/email-Enron.php
+
+Nodes: 36,692
+
+Edges: 183,831
+
+Type: Directed
+
+Description: This dataset contains real email communications between Enron employees. Each node is an employee, and each tie is a directed edge showing who sent an email to whom. It was collected during the Federal Energy Regulatory Commission’s investigation into the company in the early 2000s and later organized and shared by researchers at Carnegie Mellon University.
+
+More info: https://www.cs.cmu.edu/~enron
+
+```{r, warning = FALSE, message = FALSE}
+m <- Matrix::readMM("email-enron.mtx")
+enron <- graph_from_adjacency_matrix(m, mode = "directed", weighted = NULL)
+```
+
+
+
+## Network Visualizations {#visualizations}
+
+### fb-forum Network Plot
+
+This plot shows the structure of user interactions in the synthetic fb-forum dataset. Most users appear to be part of a large, interconnected component, with some denser regions that could suggest informal communities or topic clusters. Since this network is undirected and modeled after public forum discussions, it makes sense that users appear equally positioned, with a few exceptions who may be more active or better connected.
+
+``` {r, warning = FALSE, message = FALSE}
+plot(fb, vertex.size=3, vertex.label=NA, main="fb-forum Network")
+```
+
+
+
+### email-Enron Network Plot
+
+This visualization of the email Enron dataset shows a much sparser and more fragmented network. The direction of edges indicates sender receiver dynamics. You can already observe nodes that are central hubs, likely managers or admins based on how many edges they send or receive. Unlike the synthetic dataset, this structure reflects real communication hierarchy in a corporate setting.
+
+```{r, message=FALSE, warning=FALSE}
+plot(enron, vertex.size=3, vertex.label=NA, edge.arrow.size=0.1, main="email-Enron Network")
+```
+
+
+
+
+## Network Analysis {#analysis}
+
+### Centrality Measures
+
+The degree distribution in the fb-forum dataset is relatively balanced, showing most users have a modest number of connections, which aligns with forum-based discussion where users reply occasionally. In contrast, the Enron email data has a few users with very high degrees — this is typical in corporate networks, where certain roles (like executives or assistants) act as communication hubs.
+
+```{r, message=FALSE, warning=FALSE}
+fb_deg <- degree(fb)
+enron_deg <- degree(enron, mode = "all")
+summary(fb_deg)
+summary(enron_deg)
+```
+
+### Community Detection 
+
+Running the Louvain algorithm reveals the number of distinct communities within each network. For fb-forum, the communities likely reflect conversational clusters, showing different groups of users who tend to interact more often with each other. For Enron, the detected communities may correspond to departments or project groups.
+
+```{r, message=FALSE, warning=FALSE}
+fb_comm <- cluster_louvain(fb)
+enron_comm <- cluster_louvain(as.undirected(enron))
+length(fb_comm)
+length(enron_comm)
+```
+
+### Visualize Communities
+
+This plot shows each user colored by their community membership. We can visually identify tightly knit clusters and separate groups, which further supports the idea that this network mimics how people gravitate toward discussion threads or subtopics in online forums.
+
+```{r, message = FALSE, warning = FALSE}
+plot(fb, vertex.color=membership(fb_comm), vertex.size=3, vertex.label=NA, main="fb-forum Communities")
+```
+
+## Conclusion {#conclusion}
+From this project, I learned how to use R and igraph to visualize and analyze both synthetic and real-world networks. The fb-forum data revealed informal but structured communities in an open discussion setting, while the Enron dataset helped me understand communication flow and hierarchy within an organization.
+
+The visualizations and centrality measures showed how different users play distinct roles in each network. For example, the Enron network had a few users with very high degrees, likely due to their formal positions on working, whereas the fb-forum showed more balanced on community engagement. I also found the Louvain algorithm helpful in revealing how users naturally group together, especially in the forum setting.
+
